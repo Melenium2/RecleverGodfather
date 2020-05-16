@@ -1,11 +1,11 @@
 package main
 
 import (
-	"RecleverGrandfather/config"
-	"RecleverGrandfather/grandlog"
-	"RecleverGrandfather/grandlog/internallogger"
-	"RecleverGrandfather/grandlog/loggerepo"
-	"RecleverGrandfather/remoteclients"
+	"RecleverGodfather/config"
+	"RecleverGodfather/grandlog"
+	"RecleverGodfather/grandlog/internallogger"
+	"RecleverGodfather/grandlog/loggerepo"
+	"RecleverGodfather/remoteclients"
 	"encoding/json"
 	"flag"
 	"fmt"

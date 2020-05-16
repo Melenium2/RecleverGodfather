@@ -1,8 +1,8 @@
 package remoteclients
 
 import (
-	"RecleverGrandfather/grandlog"
-	guard "RecleverGrandfather/proto"
+	"RecleverGodfather/grandlog"
+	guard "RecleverGodfather/proto"
 	"context"
 	"encoding/json"
 	"github.com/go-kit/kit/endpoint"

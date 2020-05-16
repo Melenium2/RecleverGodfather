@@ -1,8 +1,8 @@
 package grandlog
 
 import (
-	"RecleverGrandfather/grandlog/internallogger"
-	"RecleverGrandfather/grandlog/loggerepo"
+	"RecleverGodfather/grandlog/internallogger"
+	"RecleverGodfather/grandlog/loggerepo"
 	"context"
 	"github.com/go-kit/kit/log"
 	"regexp"
