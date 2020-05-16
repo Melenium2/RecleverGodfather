@@ -4,7 +4,6 @@ import (
 	"RecleverGodfather/grandlog"
 	guard "RecleverGodfather/proto"
 	"context"
-	"encoding/json"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/sd"
 	"github.com/go-kit/kit/sd/consul"
@@ -13,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc"
 	"io"
+	"log"
 	"net/http"
 	"time"
 )
@@ -32,7 +32,7 @@ func NewGuardClient(client consul.Client, logger grandlog.GrandLogger) http.Hand
 		factory := guardFactory(makeTopChartEndpoint, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
-		retry := lb.Retry(3, time.Second * 60, balancer)
+		retry := lb.Retry(3, time.Second*60, balancer)
 		endpoints.charts = retry
 	}
 
@@ -72,16 +72,12 @@ func accessControl(h http.Handler) http.Handler {
 }
 
 func httpDecodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	log.Print("New request")
 	return nil, nil
 }
 
 func httpEncodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
-	//resp := response.(*CreateResponse)
-	//if resp.Err == "" {
 	return encodeHTTPResponse(ctx, http.StatusOK, w, response)
-	//}
-	//encodeHttpError(ctx, getHTTPError(resp.Err), w)
-	//return nil
 }
 
 func makeTopChartEndpoint(client guard.GuardClient) endpoint.Endpoint {
@@ -103,53 +99,26 @@ func makeTopChartEndpoint(client guard.GuardClient) endpoint.Endpoint {
 				Device: "whyred",
 			},
 		}
+		log.Print("Trying to send request")
 		resp, err := client.TopCharts(ctx, cred)
 		if err != nil {
 			return nil, err
 		}
 
+		log.Print("Request sent")
 		return resp, err
 	}
 }
 
 func guardFactory(makeEndpoint func(client guard.GuardClient) endpoint.Endpoint, logger grandlog.GrandLogger) sd.Factory {
 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
+		log.Print("Instance", instance)
 		conn, err := grpc.Dial(instance, grpc.WithInsecure())
 		if err != nil {
 			return nil, nil, err
 		}
-		c, closer, err := newGuardClient(conn)
-		return makeEndpoint(c), closer, err
+		client := guard.NewGuardClient(conn)
+		logger.Log("[Info]", "connection establish")
+		return makeEndpoint(client), conn, err
 	}
-}
-
-func newGuardClient(c *grpc.ClientConn) (guard.GuardClient, *grpc.ClientConn, error) {
-	return guard.NewGuardClient(c), c, nil
-}
-
-func encodeHttpError(_ context.Context, err error, w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	//switch err {
-	//case errBadRequest:
-	//	w.WriteHeader(http.StatusBadRequest)
-	//case errBadRoute:
-	//	w.WriteHeader(http.StatusNotFound)
-	//default:
-	w.WriteHeader(http.StatusBadRequest)
-	//}
-	e := json.NewEncoder(w).Encode(map[string]interface{}{
-		"error": err.Error(),
-	})
-	if e != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-}
-
-func encodeHTTPResponse(_ context.Context, code int, w http.ResponseWriter, response interface{}) error {
-	w.WriteHeader(code)
-	if response == nil {
-		return nil
-	}
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	return json.NewEncoder(w).Encode(response)
 }
