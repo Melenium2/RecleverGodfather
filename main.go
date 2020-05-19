@@ -140,4 +140,3 @@ func createLogger(loggerDb *sqlx.DB) grandlog.GrandLogger {
 	logger.Log("[Info]", "logger created")
 	return logger
 }
-

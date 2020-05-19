@@ -32,7 +32,7 @@ func NewGuardClient(client consul.Client, logger grandlog.GrandLogger) http.Hand
 		factory := guardFactory(makeTopChartEndpoint, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
-		retry := lb.Retry(3, time.Second*60, balancer)
+		retry := lb.Retry(3, time.Second*180, balancer)
 		endpoints.charts = retry
 	}
 
@@ -99,20 +99,18 @@ func makeTopChartEndpoint(client guard.GuardClient) endpoint.Endpoint {
 				Device: "whyred",
 			},
 		}
-		log.Print("Trying to send request")
 		resp, err := client.TopCharts(ctx, cred)
 		if err != nil {
 			return nil, err
 		}
 
-		log.Print("Request sent")
 		return resp, err
 	}
 }
 
 func guardFactory(makeEndpoint func(client guard.GuardClient) endpoint.Endpoint, logger grandlog.GrandLogger) sd.Factory {
 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
-		log.Print("Instance", instance)
+		logger.Log("[Info]", "Instance trying to connect ", instance)
 		conn, err := grpc.Dial(instance, grpc.WithInsecure())
 		if err != nil {
 			return nil, nil, err
