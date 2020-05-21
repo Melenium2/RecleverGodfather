@@ -1,12 +1,12 @@
 package main
 
 import (
-	"RecleverGrandfather/config"
-	"RecleverGrandfather/grandlog"
-	"RecleverGrandfather/grandlog/internallogger"
-	"RecleverGrandfather/grandlog/loggerepo"
-	"RecleverGrandfather/remoteclients"
-	"encoding/json"
+	"RecleverGodfather/config"
+	"RecleverGodfather/grandlog"
+	"RecleverGodfather/grandlog/internallogger"
+	"RecleverGodfather/grandlog/loggerepo"
+	"RecleverGodfather/handlers"
+	"RecleverGodfather/remoteclients"
 	"flag"
 	"fmt"
 	"github.com/BurntSushi/toml"
@@ -27,10 +27,13 @@ import (
 func main() {
 	conf := createConfig()
 	var (
-		httpAddr   = conf.HTTPPort
-		_          = conf.GRPCPort
-		consulAddr = conf.ConsulPort
-		logger     = createLogger(createLoggerDb(conf.LoggerDBUrl))
+		httpAddr    = conf.HTTPPort
+		_           = conf.GRPCPort
+		consulAddr  = conf.ConsulPort
+		tgToken     = conf.TgToken
+		tgChatId    = conf.TgChatId
+		telegramBot = internallogger.NewTelegramLogger(tgToken, tgChatId)
+		logger      = createLogger(createLoggerDb(conf.LoggerDBUrl), telegramBot)
 	)
 	var consulClient consul.Client
 	{
@@ -51,25 +54,10 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	r.PathPrefix("/v1").Handler(http.StripPrefix("/v1", remoteclients.NewGuardClient(consulClient, logger)))
-	r.HandleFunc("/log", func(w http.ResponseWriter, r *http.Request) {
-		log := &loggerepo.SingleLog{}
-		if err := json.NewDecoder(r.Body).Decode(log); err != nil {
-			logger.Log("[Error]", err)
-			return
-		}
-		if log.MessageType == "" {
-			logger.Log("[Error]", "empty request")
-			return
-		}
-		if err := logger.LogObject(r.Context(), log); err != nil {
-			logger.Log("[Error]", err)
-			return
-		}
-
-		w.WriteHeader(200)
-		w.Write([]byte("Complete"))
-	})
+	r.PathPrefix("/guard").Handler(http.StripPrefix("/guard", remoteclients.NewGuardClient(consulClient, logger)))
+	r.PathPrefix("/recr").Handler(http.StripPrefix("/recr", remoteclients.NewRecruiterClient(consulClient, logger)))
+	r.HandleFunc("/log", handlers.Log(logger))
+	printRouter(logger, r)
 
 	errs := make(chan error)
 	go func() {
@@ -81,6 +69,19 @@ func main() {
 	go func() {
 		logger.Log("transport", "http", "addr", httpAddr)
 		errs <- http.ListenAndServe(httpAddr, r)
+	}()
+
+	go func() {
+		up := telegramBot.ServeUpdates(internallogger.GenerateUpdateConfig(0))
+		defer telegramBot.CloseUpdates()
+		defer up.Clear()
+		for {
+			update, ok := <-up
+			if !ok {
+				return
+			}
+			telegramBot.Sendlog(update.Message.Chat.Id, "Message accepted")
+		}
 	}()
 
 	// log errs
@@ -121,7 +122,7 @@ func createLoggerDb(dbURL string) *sqlx.DB {
 	return c
 }
 
-func createLogger(loggerDb *sqlx.DB) grandlog.GrandLogger {
+func createLogger(loggerDb *sqlx.DB, telegramBot internallogger.InternalLogger) grandlog.GrandLogger {
 	var logger grandlog.GrandLogger
 	{
 		var defaultLogger kitlog.Logger
@@ -132,12 +133,24 @@ func createLogger(loggerDb *sqlx.DB) grandlog.GrandLogger {
 		}
 		loggerRepo := loggerepo.NewClickhouseLogger(loggerDb, defaultLogger)
 		defaultLogger.Log("[Info]", "Logger db initialized")
-		internalLogger := internallogger.NewTelegramLogger()
 		defaultLogger.Log("[Info]", "Internal logger initialized")
 
-		logger = grandlog.NewGrandLogger(loggerRepo, defaultLogger, internalLogger)
+		logger = grandlog.NewGrandLogger(loggerRepo, defaultLogger, telegramBot)
 	}
 	logger.Log("[Info]", "logger created")
 	return logger
+}
+
+func printRouter(logger grandlog.GrandLogger, router *mux.Router) {
+	router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		temp, err := route.GetPathTemplate()
+		if err != nil {
+			logger.Log("type", "[Error]", "service", "godfather", "trace", err)
+			return err
+		}
+
+		logger.Log("type", "[Error]", "service", "godfather", "route", temp)
+		return nil
+	})
 }
 

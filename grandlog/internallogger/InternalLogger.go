@@ -1,7 +1,5 @@
 package internallogger
 
-import "context"
-
 type InternalLogger interface {
-	sendlog(ctx context.Context, obj interface{})
+	Sendlog(chatId int, message string) error
 }

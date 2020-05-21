@@ -1,12 +1,14 @@
 package grandlog
 
 import (
-	"RecleverGrandfather/grandlog/internallogger"
-	"RecleverGrandfather/grandlog/loggerepo"
+	"RecleverGodfather/grandlog/internallogger"
+	"RecleverGodfather/grandlog/loggerepo"
 	"context"
+	"fmt"
 	"github.com/go-kit/kit/log"
 	"regexp"
 	"strings"
+	"time"
 )
 
 type GrandLogger interface {
@@ -52,10 +54,13 @@ func (gl *GrandLog) Logs(ctx context.Context, keyvals ...interface{}) error {
 			log += str.(string) + sep
 		}
 	}
+	defer gl.internalLogger.Sendlog(0, fmt.Sprintf("%v [%s] %s", time.Now().String(), msgType, log))
 
 	return gl.repoLogger.Savelog(ctx, msgType, strings.TrimSpace(log))
 }
 
 func (gl *GrandLog) LogObject(ctx context.Context, log *loggerepo.SingleLog) error {
+	defer gl.internalLogger.Sendlog(0, fmt.Sprintf("%v [%s] %s", time.Now().String(),log.MessageType, log.Log))
+
 	return gl.repoLogger.Savelog(ctx, log.MessageType, log.Log)
 }
