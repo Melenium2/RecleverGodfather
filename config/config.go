@@ -6,6 +6,8 @@ type Config struct {
 	HTTPPort     string `toml:"http_port"`
 	GRPCPort     string `toml:"grpc_port"`
 	ConsulPort   string `toml:"consul_port"`
+	TgToken      string `toml:"tg_token"`
+	TgChatId     int    `toml:"tg_chat_id"`
 }
 
 func NewConfig() *Config {

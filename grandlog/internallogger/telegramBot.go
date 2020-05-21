@@ -1,7 +1,6 @@
 package internallogger
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,21 +13,39 @@ import (
 const ApiEndpoint = "https://api.telegram.org/bot%s/%s"
 
 type TelegramLogger struct {
-	apiToken     string
-	shutdownChan chan interface{}
-	client       *http.Client
+	apiToken      string
+	defaultChatId int
+	shutdownChan  chan interface{}
+	client        *http.Client
 }
 
-func NewTelegramLogger(token string) *TelegramLogger {
+func NewTelegramLogger(token string, chatId int) *TelegramLogger {
 	return &TelegramLogger{
-		apiToken: token,
-		shutdownChan: make(chan interface{}),
-		client: http.DefaultClient,
+		apiToken:      token,
+		defaultChatId: chatId,
+		shutdownChan:  make(chan interface{}),
+		client:        http.DefaultClient,
 	}
 }
 
-func (t *TelegramLogger) Sendlog(ctx context.Context, obj interface{}) {
-	panic("implement me")
+func (t *TelegramLogger) Sendlog(chatId int, message string) error {
+	v := url.Values{}
+	if chatId != 0 {
+		v.Add("chat_id", strconv.Itoa(chatId))
+	} else {
+		v.Add("chat_id", strconv.Itoa(t.defaultChatId))
+	}
+	if message != "" {
+		v.Add("text", message)
+	}
+
+	b, err := t.doRequest("sendMessage", v)
+	if err != nil {
+		return err
+	}
+	defer b.Close()
+
+	return nil
 }
 
 func (t *TelegramLogger) GetUpdates(config *UpdateConfig) (*response, error) {
@@ -57,7 +74,7 @@ func (t *TelegramLogger) GetUpdates(config *UpdateConfig) (*response, error) {
 	return resp, nil
 }
 
-func (t *TelegramLogger) ServeUpdates(config *UpdateConfig) (UpdateChannel, error) {
+func (t *TelegramLogger) ServeUpdates(config *UpdateConfig) UpdateChannel {
 	up := make(chan *update)
 
 	go func() {
@@ -77,7 +94,6 @@ func (t *TelegramLogger) ServeUpdates(config *UpdateConfig) (UpdateChannel, erro
 			}
 
 			for _, update := range updates.Result {
-				println(update.UpdateId)
 				if update.UpdateId >= config.Offset {
 					config.Offset = update.UpdateId + 1
 					up <- update
@@ -86,7 +102,7 @@ func (t *TelegramLogger) ServeUpdates(config *UpdateConfig) (UpdateChannel, erro
 		}
 	}()
 
-	return up, nil
+	return up
 }
 
 func (t *TelegramLogger) CloseUpdates() {

@@ -12,7 +12,13 @@ func TestNewTelegramLogger(t *testing.T) {
 		t.Fatal(err)
 	}
 	for  {
-		update := <-up
+		update, ok := <-up
+		println(ok)
+		if !ok {
+			break
+		}
 		println(fmt.Sprintf("%v", update.Message.Text))
+		bot.Sendlog(update.Message.Chat.Id, "Privet")
+		bot.CloseUpdates()
 	}
 }
