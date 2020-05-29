@@ -2,6 +2,7 @@ package loggerepo
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-kit/kit/log"
 	"github.com/jmoiron/sqlx"
 	"time"
@@ -32,7 +33,7 @@ func NewClickhouseLogger(db *sqlx.DB, log log.Logger) Logs {
 func (c *ClickhouseLogger) Savelog(ctx context.Context, messageType, log string) error {
 	if _, err := c.db.ExecContext(
 		ctx,
-		"insert into logs (message_type, times, log) values (?, ?, ?)",
+		fmt.Sprint("insert into logs (message_type, times, log) values (?, ?, ?)"),
 		messageType, time.Now().UTC().Unix(), log,
 	); err != nil {
 		c.logger.Log("[Error]", err)
