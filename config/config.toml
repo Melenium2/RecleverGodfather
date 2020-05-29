@@ -2,5 +2,4 @@ logger_database = "http://192.168.99.100:8123/default"
 http_port = ":0066"
 grpc_port = ":0067"
 consul_port = "192.168.99.100:8500"
-tg_token = "1293039613:AAER81Qqklo9JZQa3kt2iHrKBA9ptPpJ8IY"
 tg_chat_id = 708015155

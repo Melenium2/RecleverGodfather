@@ -83,8 +83,8 @@ func httpEncodeResponse(ctx context.Context, w http.ResponseWriter, response int
 func makeTopChartEndpoint(client guard.GuardClient) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		cred := &guard.ChartsRequest{
-			Cat:    "apps_topselling_paid_GAME",
-			SubCat: "",
+			Cat:    "HEALTH_AND_FITNESS",
+			SubCat: "apps_topselling_free",
 			Account: &guard.Account{
 				Login:    "dd923633@gmail.com",
 				Password: "s0EJ3xuPq",

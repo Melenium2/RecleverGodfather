@@ -29,4 +29,5 @@ message ChartsRequest {
 message ChartResponse {
     repeated string ids = 1;
     Account account = 2;
+    int32 errCode = 3;
 }

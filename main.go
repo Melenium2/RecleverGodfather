@@ -27,14 +27,22 @@ import (
 func main() {
 	conf := createConfig()
 	var (
-		httpAddr    = conf.HTTPPort
-		_           = conf.GRPCPort
-		consulAddr  = conf.ConsulPort
-		tgToken     = conf.TgToken
-		tgChatId    = conf.TgChatId
-		telegramBot = internallogger.NewTelegramLogger(tgToken, tgChatId)
-		logger      = createLogger(createLoggerDb(conf.LoggerDBUrl), telegramBot)
+		httpAddr   = conf.HTTPPort
+		_          = conf.GRPCPort
+		consulAddr = os.Getenv("consul_port")
+		tgToken    = os.Getenv("tg_token")
+		tgChatId   = conf.TgChatId
 	)
+	if consulAddr == "" {
+		consulAddr = conf.ConsulPort
+	}
+	if tgToken == "" {
+		tgToken = conf.TgToken
+	}
+
+	var telegramBot = internallogger.NewTelegramLogger(tgToken, tgChatId)
+	var logger = createLogger(createLoggerDb(conf.LoggerDBUrl), telegramBot)
+
 	var consulClient consul.Client
 	{
 		consulConfig := api.DefaultConfig()
@@ -56,6 +64,7 @@ func main() {
 	r := mux.NewRouter()
 	r.PathPrefix("/guard").Handler(http.StripPrefix("/guard", remoteclients.NewGuardClient(consulClient, logger)))
 	r.PathPrefix("/recr").Handler(http.StripPrefix("/recr", remoteclients.NewRecruiterClient(consulClient, logger)))
+	r.PathPrefix("/right").Handler(http.StripPrefix("/right", remoteclients.NewRightHandClient(consulClient, logger)))
 	r.HandleFunc("/log", handlers.Log(logger))
 	printRouter(logger, r)
 
@@ -149,8 +158,7 @@ func printRouter(logger grandlog.GrandLogger, router *mux.Router) {
 			return err
 		}
 
-		logger.Log("type", "[Error]", "service", "godfather", "route", temp)
+		logger.Log("type", "[Info]", "service", "godfather", "route", temp)
 		return nil
 	})
 }
-
