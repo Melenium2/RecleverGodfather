@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/Melenium2/RecleverRecruiter v1.0.5
-	github.com/Melenium2/RecleverRightHand v1.0.3
+	github.com/Melenium2/RecleverRightHand v1.0.5
 	github.com/go-kit/kit v0.10.0
 	github.com/golang/protobuf v1.4.1
 	github.com/gorilla/mux v1.7.3
