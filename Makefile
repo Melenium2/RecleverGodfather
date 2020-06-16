@@ -1,4 +1,4 @@
-include .env
+-include .env
 export tg_chat_id := $(TG_CHAT_ID)
 export tg_token := $(TG_TOKEN)
 export http_port := $(HTTP_PORT)
