@@ -6,7 +6,7 @@ export grpc_port := $(GRPC_PORT)
 export logger_db := $(LOGGER_DB)
 export consul_addr := $(CONSUL_ADDR)
 
-GOBIN=./cmd/$(BINNAME)
+GOBIN=./cmd/main
 
 ## build: Build go binary
 build:
