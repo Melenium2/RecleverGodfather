@@ -1,15 +1,12 @@
 package main
 
 import (
-	"RecleverGodfather/config"
 	"RecleverGodfather/grandlog"
 	"RecleverGodfather/grandlog/internallogger"
 	"RecleverGodfather/grandlog/loggerepo"
 	"RecleverGodfather/handlers"
 	"RecleverGodfather/remoteclients"
-	"flag"
 	"fmt"
-	"github.com/BurntSushi/toml"
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/sd/consul"
 	"github.com/gorilla/mux"
@@ -21,37 +18,38 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
+	"time"
 )
 
 func main() {
-	conf := createConfig()
 	var (
-		httpAddr   = conf.HTTPPort
-		_          = conf.GRPCPort
-		consulAddr = os.Getenv("consul_port")
-		tgToken    = os.Getenv("tg_token")
-		tgChatId   = conf.TgChatId
+		httpAddr     = os.Getenv("http_port")
+		_            = os.Getenv("grpc_port")
+		consulAddr   = os.Getenv("consul_addr")
+		tgToken      = os.Getenv("tg_token")
+		tgChatId     = os.Getenv("tg_chat_id")
+		loggerSource = os.Getenv("logger_db")
+		configDir    = os.Getenv("config_dir")
 	)
-	if consulAddr == "" {
-		consulAddr = conf.ConsulPort
+	if httpAddr == "" || consulAddr == "" || loggerSource == "" {
+		log.Fatal("Error in main. Need to provide environment vars first")
 	}
-	if tgToken == "" {
-		tgToken = conf.TgToken
+	if tgToken == "" || tgChatId == "" {
+		log.Fatalf("You need to provide telegram token and chat id")
 	}
-
-	var telegramBot = internallogger.NewTelegramLogger(tgToken, tgChatId)
-	var logger = createLogger(createLoggerDb(conf.LoggerDBUrl), telegramBot)
+	if configDir == "" {
+		configDir = "."
+	}
+	chatId, _ := strconv.Atoi(tgChatId)
+	var telegramBot = internallogger.NewTelegramLogger(tgToken, chatId)
+	var logger = createLogger(createLoggerDb(loggerSource, configDir), telegramBot)
 
 	var consulClient consul.Client
 	{
 		consulConfig := api.DefaultConfig()
-		if len(consulAddr) > 0 {
-			consulConfig.Address = consulAddr
-		} else {
-			logger.Log("Consul port is empty")
-			os.Exit(1)
-		}
+		consulConfig.Address = consulAddr
 		cl, err := api.NewClient(consulConfig)
 		if err != nil {
 			logger.Log("err", err)
@@ -84,6 +82,7 @@ func main() {
 		up := telegramBot.ServeUpdates(internallogger.GenerateUpdateConfig(0))
 		defer telegramBot.CloseUpdates()
 		defer up.Clear()
+		logger.Log("type", "[Info]", "service", "godfather", "action", "start serving updates from telegram")
 		for {
 			update, ok := <-up
 			if !ok {
@@ -97,28 +96,17 @@ func main() {
 	logger.Log("Terminate", <-errs)
 }
 
-func createConfig() *config.Config {
-	var configPath string
-	flag.StringVar(&configPath, "config-path", "config/config.toml", "path to config file")
-	flag.Parse()
-	c := config.NewConfig()
-	_, err := toml.DecodeFile(configPath, c)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return c
-}
-
-func createLoggerDb(dbURL string) *sqlx.DB {
+func createLoggerDb(dbURL, configDir string) *sqlx.DB {
 	log.Print("Connect to db url ", dbURL, " ...")
 	c, err := sqlx.Connect("clickhouse", dbURL)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		time.Sleep(time.Second * 15)
+		createLoggerDb(dbURL, configDir)
 	}
 	log.Print("Connected to db.", "Init schema...")
 
-	ddl, err := ioutil.ReadFile("config/schema.sql")
+	ddl, err := ioutil.ReadFile(fmt.Sprintf("%s/config/schema.sql", configDir))
 	if err != nil {
 		log.Fatal(err)
 	}

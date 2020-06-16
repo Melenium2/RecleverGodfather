@@ -18,7 +18,7 @@ func NewRightHandClient(client consul.Client, logger grandlog.GrandLogger) http.
 		tags        = []string{}
 		passingOnly = true
 		endpoints   = &logic.Endpoints{}
-		instancer   = consul.NewInstancer(client, logger, "recruiter", tags, passingOnly)
+		instancer   = consul.NewInstancer(client, logger, "Right Hand", tags, passingOnly)
 	)
 	{
 		factory := righthandFactory(logic.MakeStartEndpoint)
@@ -26,6 +26,13 @@ func NewRightHandClient(client consul.Client, logger grandlog.GrandLogger) http.
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(3, time.Second*180, balancer)
 		endpoints.StartEndpoint = retry
+	}
+	{
+		factory := righthandFactory(logic.MakeTerminateEndpoint)
+		endpointer := sd.NewEndpointer(instancer, factory, logger)
+		balancer := lb.NewRoundRobin(endpointer)
+		retry := lb.Retry(3, time.Second*180, balancer)
+		endpoints.TerminateEndpoint = retry
 	}
 
 	return logic.NewHttpTransport(endpoints, logger)
