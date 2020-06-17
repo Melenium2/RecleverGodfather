@@ -38,7 +38,7 @@ func main() {
 		log.Fatal("Error in main. Need to provide environment vars first")
 	}
 	if tgToken == "" || tgChatId == "" {
-		log.Fatalf("You need to provide telegram token and chat id")
+		log.Fatal("You need to provide telegram token and chat id")
 	}
 	if configDir == "" {
 		configDir = "."
@@ -66,6 +66,8 @@ func main() {
 	r.PathPrefix("/right").Handler(http.StripPrefix("/right", remoteclients.NewRightHandClient(consulClient, logger)))
 	r.HandleFunc("/log", handlers.Log(logger))
 	printRouter(logger, r)
+
+	log.Print("look for changes...!!!")
 
 	errs := make(chan error)
 	go func() {
