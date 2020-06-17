@@ -67,7 +67,7 @@ func main() {
 	r.HandleFunc("/log", handlers.Log(logger))
 	printRouter(logger, r)
 
-	log.Print("look for changes...!!!")
+	log.Print("look for changes...!!!2d")
 
 	errs := make(chan error)
 	go func() {
