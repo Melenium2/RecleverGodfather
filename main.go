@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -104,7 +105,7 @@ func createLoggerDb(dbURL, configDir string) *sqlx.DB {
 		time.Sleep(time.Second * 15)
 		createLoggerDb(dbURL, configDir)
 	}
-	log.Print("Connected to db.", "Init schema...")
+	log.Print("Connected to db.", " Init schema...")
 
 	ddl, err := ioutil.ReadFile(fmt.Sprintf("%s/config/schema.sql", configDir))
 	if err != nil {
@@ -112,7 +113,14 @@ func createLoggerDb(dbURL, configDir string) *sqlx.DB {
 	}
 	log.Print("Read schema from file...")
 	if _, err := c.Exec(string(ddl)); err != nil {
-		log.Fatal(err)
+		if strings.Contains(err.Error(), "Code: 57") {
+			newddl := strings.ReplaceAll(string(ddl), "create table if not exists", "ATTACH TABLE")
+			if _, err := c.Exec(newddl); err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			log.Fatal(err)
+		}
 	}
 	log.Print("Schema created.")
 
