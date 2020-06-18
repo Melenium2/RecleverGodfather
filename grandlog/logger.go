@@ -5,9 +5,8 @@ import (
 	"RecleverGodfather/grandlog/loggerepo"
 	"context"
 	"fmt"
-	"github.com/go-kit/kit/log"
+	murlog "github.com/Melenium2/Murlog"
 	"regexp"
-	"strings"
 	"time"
 )
 
@@ -24,11 +23,11 @@ var (
 
 type GrandLog struct {
 	repoLogger     loggerepo.Logs
-	logger         log.Logger
+	logger         murlog.Logger
 	internalLogger internallogger.InternalLogger
 }
 
-func NewGrandLogger(db loggerepo.Logs, logger log.Logger, internalLogger internallogger.InternalLogger) GrandLogger {
+func NewGrandLogger(db loggerepo.Logs, logger murlog.Logger, internalLogger internallogger.InternalLogger) GrandLogger {
 	return &GrandLog{
 		repoLogger:     db,
 		logger:         logger,
@@ -54,13 +53,22 @@ func (gl *GrandLog) Logs(ctx context.Context, keyvals ...interface{}) error {
 			log += str.(string) + sep
 		}
 	}
-	defer gl.internalLogger.Sendlog(0, fmt.Sprintf("%v [%s] %s", time.Now().String(), msgType, log))
 
-	return gl.repoLogger.Savelog(ctx, msgType, strings.TrimSpace(log))
+	gl.LogObject(ctx, &loggerepo.SingleLog{
+		MessageType: msgType,
+		Log:         log,
+	})
+
+	return gl.Log(keyvals...)
 }
 
 func (gl *GrandLog) LogObject(ctx context.Context, log *loggerepo.SingleLog) error {
-	defer gl.internalLogger.Sendlog(0, fmt.Sprintf("%v [%s] %s", time.Now().String(),log.MessageType, log.Log))
-
+	if log.MessageType == "Error" {
+		defer gl.internalLogger.Sendlog(0, fmt.Sprintf("%v [%s] %v", timestamp(), log.MessageType, log.Log))
+	}
 	return gl.repoLogger.Savelog(ctx, log.MessageType, log.Log)
+}
+
+func timestamp() string {
+	return time.Now().UTC().Format("2006-01-02 15:04:05")
 }

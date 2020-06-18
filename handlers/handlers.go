@@ -12,17 +12,17 @@ func Log(logger grandlog.GrandLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log := &loggerepo.SingleLog{}
 		if err := json.NewDecoder(r.Body).Decode(log); err != nil {
-			logger.Log("[Error]", err)
+			logger.Log("error", err)
 			writeError(w, http.StatusBadRequest, err)
 			return
 		}
 		if log.MessageType == "" {
-			logger.Log("[Error]", "empty request")
+			logger.Log("error", "empty request")
 			writeError(w, http.StatusBadRequest, errors.New("empty request"))
 			return
 		}
 		if err := logger.LogObject(r.Context(), log); err != nil {
-			logger.Log("[Error]", err)
+			logger.Log("error", err)
 			writeError(w, http.StatusBadRequest, err)
 			return
 		}

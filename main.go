@@ -7,7 +7,7 @@ import (
 	"RecleverGodfather/handlers"
 	"RecleverGodfather/remoteclients"
 	"fmt"
-	kitlog "github.com/go-kit/kit/log"
+	murlog "github.com/Melenium2/Murlog"
 	"github.com/go-kit/kit/sd/consul"
 	"github.com/gorilla/mux"
 	"github.com/hashicorp/consul/api"
@@ -61,13 +61,10 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	r.PathPrefix("/guard").Handler(http.StripPrefix("/guard", remoteclients.NewGuardClient(consulClient, logger)))
 	r.PathPrefix("/recr").Handler(http.StripPrefix("/recr", remoteclients.NewRecruiterClient(consulClient, logger)))
 	r.PathPrefix("/right").Handler(http.StripPrefix("/right", remoteclients.NewRightHandClient(consulClient, logger)))
 	r.HandleFunc("/log", handlers.Log(logger))
 	printRouter(logger, r)
-
-	log.Print("look for changes...!!!2d")
 
 	errs := make(chan error)
 	go func() {
@@ -85,7 +82,7 @@ func main() {
 		up := telegramBot.ServeUpdates(internallogger.GenerateUpdateConfig(0))
 		defer telegramBot.CloseUpdates()
 		defer up.Clear()
-		logger.Log("type", "[Info]", "service", "godfather", "action", "start serving updates from telegram")
+		logger.Log("msg", "start serving updates from telegram")
 		for {
 			update, ok := <-up
 			if !ok {
@@ -95,7 +92,6 @@ func main() {
 		}
 	}()
 
-	// log errs
 	logger.Log("Terminate", <-errs)
 }
 
@@ -132,19 +128,23 @@ func createLoggerDb(dbURL, configDir string) *sqlx.DB {
 func createLogger(loggerDb *sqlx.DB, telegramBot internallogger.InternalLogger) grandlog.GrandLogger {
 	var logger grandlog.GrandLogger
 	{
-		var defaultLogger kitlog.Logger
+		var defaultLogger murlog.Logger
 		{
-			defaultLogger = kitlog.NewLogfmtLogger(os.Stderr)
-			defaultLogger = kitlog.With(defaultLogger, "ts", kitlog.DefaultTimestampUTC)
-			defaultLogger = kitlog.With(defaultLogger, "caller", kitlog.DefaultCaller)
+			c := murlog.NewConfig()
+			c.TimePref(time.RFC1123)
+			c.CallerCustomPref(5)
+			c.Pref(func() interface{} {
+				return "service=godfather"
+			})
+			defaultLogger = murlog.NewLogger(c)
 		}
 		loggerRepo := loggerepo.NewClickhouseLogger(loggerDb, defaultLogger)
-		defaultLogger.Log("[Info]", "Logger db initialized")
-		defaultLogger.Log("[Info]", "Internal logger initialized")
+		defaultLogger.Log("msg", "Logger db initialized")
+		defaultLogger.Log("msg", "Internal logger initialized")
 
 		logger = grandlog.NewGrandLogger(loggerRepo, defaultLogger, telegramBot)
 	}
-	logger.Log("[Info]", "logger created")
+	logger.Log("msg", "logger created")
 	return logger
 }
 
@@ -152,11 +152,11 @@ func printRouter(logger grandlog.GrandLogger, router *mux.Router) {
 	router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 		temp, err := route.GetPathTemplate()
 		if err != nil {
-			logger.Log("type", "[Error]", "service", "godfather", "trace", err)
+			logger.Log("error", err)
 			return err
 		}
 
-		logger.Log("type", "[Info]", "service", "godfather", "route", temp)
+		logger.Log("route", temp)
 		return nil
 	})
 }
