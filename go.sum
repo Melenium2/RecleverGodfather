@@ -8,6 +8,8 @@ github.com/Melenium2/Murlog v0.0.9 h1:4mQGmyhI7ebK65lF4tAB3gWxY+KtK4VLur1hiBG51j
 github.com/Melenium2/Murlog v0.0.9/go.mod h1:LqRoG00sVBmgiW4vUym2HZL8Fb3bHfhQYvQ543nhbXc=
 github.com/Melenium2/Murlog v0.0.10 h1:rR4LdOhDXoILgRLj2OU7PjS3yf8nTIOTHITZ1fAwLzs=
 github.com/Melenium2/Murlog v0.0.10/go.mod h1:LqRoG00sVBmgiW4vUym2HZL8Fb3bHfhQYvQ543nhbXc=
+github.com/Melenium2/RecleverLeftHand v0.0.2 h1:k72+iANyPLbV7//3qnNrxlP9UYSG6bl9/+p3Xn3o6vY=
+github.com/Melenium2/RecleverLeftHand v0.0.2/go.mod h1:VhWYZ0+ECJl3sbaEYYteYbsqlwYWzCnFHrELlmoXIy8=
 github.com/Melenium2/RecleverRecruiter v1.0.0 h1:fLplnkXNalj6dNIFHsgnHJ/yhQbomLIqxEVhyWzj7oY=
 github.com/Melenium2/RecleverRecruiter v1.0.0/go.mod h1:4Papj+ldE2xnN60XpzSOFf+ReurL4Cmpdype6BrQffs=
 github.com/Melenium2/RecleverRecruiter v1.0.1 h1:OyhJc0rPZ8gJIUG4/SK5g1UZFfMewZ5vPDK64HDbsBI=
@@ -30,6 +32,8 @@ github.com/Melenium2/RecleverRightHand v1.0.4 h1:+03tWoxJ4q9WLoWSX3FEPU5wPg2Gbnh
 github.com/Melenium2/RecleverRightHand v1.0.4/go.mod h1:e4NV4pgFVJ1Bpd9vkMLynSw5RNIi50yrFv1pkABxmpA=
 github.com/Melenium2/RecleverRightHand v1.0.5 h1:P4pMfn85m7+ps3fwuSLiPpfefh4EFdTfwUFbRkcL9PA=
 github.com/Melenium2/RecleverRightHand v1.0.5/go.mod h1:e4NV4pgFVJ1Bpd9vkMLynSw5RNIi50yrFv1pkABxmpA=
+github.com/Melenium2/RecleverRightHand v1.0.6 h1:zMp75TRYT4DNdSrdz5Uzhs8hjIWPeRhVd/tbTcS/CHw=
+github.com/Melenium2/RecleverRightHand v1.0.6/go.mod h1:e4NV4pgFVJ1Bpd9vkMLynSw5RNIi50yrFv1pkABxmpA=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/VividCortex/gohistogram v1.0.0/go.mod h1:Pf5mBqqDxYaXu3hDrrU+w6nw50o/4+TcAqDqk/vUH7g=
@@ -379,6 +383,8 @@ go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738/go.mod h1:dnLIgRNXwCJa5e+c6mIZCrds/GIG4ncV9HhK5PX7jPg=
 go.mongodb.org/mongo-driver v1.3.3 h1:9kX7WY6sU/5qBuhm5mdnNWdqaDAQKB2qSZOd5wMEPGQ=
 go.mongodb.org/mongo-driver v1.3.3/go.mod h1:MSWZXKOynuguX+JSvwP8i+58jYCXxbia8HS3gZBapIE=
+go.mongodb.org/mongo-driver v1.3.4 h1:zs/dKNwX0gYUtzwrN9lLiR15hCO0nDwQj5xXx+vjCdE=
+go.mongodb.org/mongo-driver v1.3.4/go.mod h1:MSWZXKOynuguX+JSvwP8i+58jYCXxbia8HS3gZBapIE=
 go.opencensus.io v0.20.1/go.mod h1:6WKK9ahsWS3RSO+PY9ZHZUfv2irvY6gN279GOPZjmmk=
 go.opencensus.io v0.20.2/go.mod h1:6WKK9ahsWS3RSO+PY9ZHZUfv2irvY6gN279GOPZjmmk=
 go.opencensus.io v0.22.2/go.mod h1:yxeiOL68Rb0Xd1ddK5vPZ/oVn4vY4Ynel7k9FzqtOIw=

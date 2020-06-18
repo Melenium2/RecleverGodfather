@@ -63,6 +63,7 @@ func main() {
 	r := mux.NewRouter()
 	r.PathPrefix("/recr").Handler(http.StripPrefix("/recr", remoteclients.NewRecruiterClient(consulClient, logger)))
 	r.PathPrefix("/right").Handler(http.StripPrefix("/right", remoteclients.NewRightHandClient(consulClient, logger)))
+	r.PathPrefix("/left").Handler(http.StripPrefix("/left", remoteclients.NewLeftHandClient(consulClient, logger)))
 	r.HandleFunc("/log", handlers.Log(logger))
 	printRouter(logger, r)
 
